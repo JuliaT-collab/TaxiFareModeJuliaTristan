@@ -1,5 +1,5 @@
 # imports
-from sklearn import set_config; set_config(display='diagram')
+
 from sklearn.pipeline import make_pipeline, Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
@@ -14,10 +14,20 @@ import pandas as pd
 import mlflow
 from mlflow.tracking import MlflowClient
 from memoized_property import memoized_property
+import datetime
+import os
+from google.cloud import storage
+import pandas as pd
+from sklearn import linear_model
+import numpy as np
+import joblib
+from params import BUCKET_NAME, BUCKET_TRAIN_DATA_PATH, MODEL_NAME, MODEL_VERSION, STORAGE_LOCATION
 
 MLFLOW_URI = "https://mlflow.lewagon.co/"
 myname = "JuliaT-collab"
 EXPERIMENT_NAME = f"TaxifareModel_{myname}"
+
+
 
 class Trainer():
     def __init__(self, X, y, experiment_name):
@@ -55,6 +65,23 @@ class Trainer():
         self.pipeline.fit(self.X, self.y)
         return self
 
+    def save_model(self):
+        """method that saves the model into a .joblib file and uploads it on Google Storage /models folder
+        HINTS : use joblib library and google-cloud-storage"""
+        reg = self.run()
+        # saving the trained model to disk is mandatory to then beeing able to upload it to storage
+        # Implement here
+        joblib.dump(reg, 'model.joblib')
+        print("saved model.joblib locally")
+
+        # Implement here
+        client = storage.Client()
+        bucket = client.get_bucket(BUCKET_NAME)
+        # Then do other things...
+        blob = bucket.blob(STORAGE_LOCATION)
+        blob.upload_from_filename(filename='model.joblib')
+        print(f"uploaded model.joblib to gcp cloud storage under \n => {STORAGE_LOCATION}")
+        return self
 
     def evaluate(self, X_test, y_test):
         """evaluates the pipeline on df_test and return the RMSE"""
@@ -62,6 +89,7 @@ class Trainer():
         rmse = compute_rmse(y_pred, y_test)
         self.mlflow_log_metric("rmse", rmse)
         return rmse
+
 
     @memoized_property
     def mlflow_client(self):
@@ -103,7 +131,7 @@ if __name__ == "__main__":
     pipeline = Trainer(X_train, y_train, EXPERIMENT_NAME)
     # train
     pipeline.run()
+    pipeline.save_model()
     # evaluate
     rmse = pipeline.evaluate(X_test, y_test)
-
     print(rmse)
