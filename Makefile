@@ -74,16 +74,6 @@ pypi:
 
 ### GCP Storage - - - - - - - - - - - - - - - - - - - - - -
 
-BUCKET_NAME='wagon-ml-tristan-wagonbootcamp-two'
-
-##### Data  - - - - - - - - - - - - - - - - - - - - - - - -
-
-# not required here
-
-##### Training  - - - - - - - - - - - - - - - - - - - - - -
-
-# will store the packages uploaded to GCP for the training
-BUCKET_TRAINING_FOLDER = 'trainings'
 
 ##### Model - - - - - - - - - - - - - - - - - - - - - - - -
 
